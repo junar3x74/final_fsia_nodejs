@@ -21,7 +21,7 @@ function query(sql, values) {
 }
 
 async function getUserByEmail(email) {
-    const sql = 'SELECT * FROM users WHERE email = ?';
+    const sql = 'SELECT email, password FROM users WHERE email = ?';
     const rows = await query(sql, [email]);
     return rows.length ? rows[0] : null;
 }
