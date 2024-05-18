@@ -70,12 +70,12 @@ app.post('/register', async (req, res, next) => {
     }
 });
 
-// For root endpoint, redirect to login page
+
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-// Start server
+
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
@@ -85,7 +85,7 @@ async function getUserByEmail(email) {
     try {
         const sql = 'SELECT * FROM users WHERE email = ?';
         const [rows] = await db.query(sql, [email]);
-        console.log(rows); // Log the result to see its format
+        console.log(rows); 
         return rows.length ? rows[0] : null;
     } catch (error) {
         throw error;
