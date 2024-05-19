@@ -26,25 +26,21 @@ async function registerUser(name, email, password, cpassword) {
   try {
     console.log('Received registration request:', { name, email, password, cpassword });
 
-    // Trim input values to remove whitespace characters
     if (!name || !email || !password || !cpassword) {
       return { status: 400, message: 'All fields are required' };
     }
+
     const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase(); // Ensure email is lowercased
     const trimmedPassword = password.trim();
     const trimmedCPassword = cpassword.trim();
 
-    // Check if password and confirm password match
     if (trimmedPassword !== trimmedCPassword) {
-      console.log('Passwords do not match:', trimmedPassword, trimmedCPassword);
       return { status: 400, message: 'Passwords do not match' };
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
 
-    // Insert new user into the database
     const query = 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)';
     await queryAsync(query, [trimmedName, trimmedEmail, hashedPassword]);
 
@@ -61,14 +57,13 @@ async function loginUser(email, password) {
   try {
     console.log('Received login request for:', email);
 
-    // Trim input values to remove whitespace characters
     if (!email || !password) {
       return { status: 400, message: 'All fields are required' };
     }
-    const trimmedEmail = email.trim();
+
+    const trimmedEmail = email.trim().toLowerCase(); // Ensure email is lowercased
     const trimmedPassword = password.trim();
 
-    // Retrieve user from the database by email
     const query = 'SELECT * FROM users WHERE email = ?';
     const rows = await queryAsync(query, [trimmedEmail]);
 
@@ -77,8 +72,9 @@ async function loginUser(email, password) {
       return { status: 404, message: 'User not found' };
     }
 
-    // Compare passwords
-    const passwordMatch = await bcrypt.compare(trimmedPassword, rows[0].password);
+    const user = rows[0];
+
+    const passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
     if (!passwordMatch) {
       console.log('Invalid password:', trimmedEmail);
       return { status: 401, message: 'Invalid password' };

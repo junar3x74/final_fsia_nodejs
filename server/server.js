@@ -1,46 +1,43 @@
 const express = require('express');
 const path = require('path');
+const bodyParser = require('body-parser');
 const { registerUser, loginUser } = require('../db/db');
 
 const app = express();
+const port = 3000;
 
-// Middleware to serve static files from the public folder
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Middleware to parse URL-encoded bodies (form data)
-app.use(express.urlencoded({ extended: true }));
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/signin-2.html'));
+});
 
-// Registration Route (POST)
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/register-2.html'));
+});
+
 app.post('/register', async (req, res) => {
-  try {
-    console.log('Request body:', req.body);
-    const { name, email, password, cpassword } = req.body;
-    const result = await registerUser(name, email, password, cpassword);
-    res.status(result.status).json({ message: result.message });
-  } catch (error) {
-    console.error('Error in /register route:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  const { name, email, password, cpassword } = req.body;
+  const result = await registerUser(name, email, password, cpassword);
+  res.status(result.status).json({ message: result.message });
 });
 
-// Login Route (POST)
 app.post('/login', async (req, res) => {
-  try {
-    console.log('Request body:', req.body);
-    const { email, password } = req.body;
-    const result = await loginUser(email, password);
-    res.status(result.status).json({ message: result.message });
-  } catch (error) {
-    console.error('Error in /login route:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  const { email, password } = req.body;
+  const result = await loginUser(email, password);
+  res.status(result.status).json({ message: result.message });
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
