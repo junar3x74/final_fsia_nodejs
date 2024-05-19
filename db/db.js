@@ -9,6 +9,12 @@ const pool = mysql.createPool({
     database: 'smartstock_db'
 });
 
+  
+
+
+
+
+    
 function query(sql, values) {
     return new Promise((resolve, reject) => {
         pool.query(sql, values, (err, results, fields) => {
