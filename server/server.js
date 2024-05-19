@@ -6,7 +6,7 @@ const { registerUser, loginUser } = require('../db/db');
 const app = express();
 const port = 3000;
 
-// Middleware
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 

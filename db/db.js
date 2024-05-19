@@ -51,41 +51,44 @@ async function registerUser(name, email, password, cpassword) {
     return { status: 500, message: 'Internal server error' };
   }
 }
-
 // Function to login a user
 async function loginUser(email, password) {
-  try {
-    console.log('Received login request for:', email);
-
-    if (!email || !password) {
-      return { status: 400, message: 'All fields are required' };
+    try {
+      console.log('Received login request for:', email);
+  
+      if (!email || !password) {
+        return { status: 400, message: 'All fields are required' };
+      }
+  
+      const trimmedEmail = email.trim().toLowerCase(); // Ensure email is lowercased
+  
+      const query = 'SELECT password FROM users WHERE email = ?'; // Retrieve only the password from the database
+      const rows = await queryAsync(query, [trimmedEmail]);
+  
+      if (rows.length === 0) {
+        console.log('User not found:', trimmedEmail);
+        return { status: 404, message: 'User not found' };
+      }
+  
+      const hashedPassword = rows[0].password; // Retrieve the hashed password from the database
+  
+      console.log('Hashed password from database:', hashedPassword);
+  
+      const passwordMatch = await bcrypt.compare(password, hashedPassword); // Compare input password with hashed password from database
+      if (!passwordMatch) {
+        console.log('Invalid password:', trimmedEmail);
+        return { status: 401, message: 'Invalid password' };
+      }
+  
+      console.log('Login successful:', trimmedEmail);
+      return { status: 200, message: 'Login successful' };
+    } catch (error) {
+      console.error('Error logging in:', error);
+      return { status: 500, message: 'Internal server error' };
     }
-
-    const trimmedEmail = email.trim().toLowerCase(); // Ensure email is lowercased
-    const trimmedPassword = password.trim();
-
-    const query = 'SELECT * FROM users WHERE email = ?';
-    const rows = await queryAsync(query, [trimmedEmail]);
-
-    if (rows.length === 0) {
-      console.log('User not found:', trimmedEmail);
-      return { status: 404, message: 'User not found' };
-    }
-
-    const user = rows[0];
-
-    const passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
-    if (!passwordMatch) {
-      console.log('Invalid password:', trimmedEmail);
-      return { status: 401, message: 'Invalid password' };
-    }
-
-    console.log('Login successful:', trimmedEmail);
-    return { status: 200, message: 'Login successful' };
-  } catch (error) {
-    console.error('Error logging in:', error);
-    return { status: 500, message: 'Internal server error' };
   }
-}
+  
+  
+  
 
 module.exports = { registerUser, loginUser };
