@@ -1,79 +1,46 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const path = require('path');
-const bcrypt = require('bcrypt');
-const db = require('../db/db');
+const { registerUser, loginUser } = require('../db/db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Middleware to serve static files from the public folder
+app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'signin-2.html'));
-});
+// Middleware to parse URL-encoded bodies (form data)
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'register-2.html'));
-});
+// Middleware to parse JSON bodies
+app.use(express.json());
 
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    console.log(`Received login request: ${email}`);
-
-    try {
-        const user = await db.getUserByEmail(email);
-
-        if (!user) {
-            console.log('User not found');
-            return res.status(401).send('Invalid email or password');
-        }
-
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
-            console.log('Password does not match');
-            return res.status(401).send('Invalid email or password');
-        }
-
-        console.log('Login successful, redirecting to index.html');
-        return res.redirect('/index.html');
-    } catch (error) {
-        console.error('Error during login:', error);
-        return res.status(500).send('Internal Server Error');
-    }
-});
-
+// Registration Route (POST)
 app.post('/register', async (req, res) => {
-    const { username, email, password, confirmPassword } = req.body;
-
-    console.log(`Received registration request: ${username}, ${email}`);
-
-    try {
-        if (!username || !email || !password || !confirmPassword) {
-            return res.status(400).send('All fields are required');
-        }
-
-        if (password !== confirmPassword) {
-            return res.status(400).send('Passwords do not match');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await db.createUser(username, email, hashedPassword);
-
-        console.log('Registration successful, redirecting to signin-2.html with success query');
-        return res.redirect('/signin-2.html?success=1');
-    } catch (error) {
-        console.error('Error during registration:', error);
-        return res.status(500).send('Internal Server Error');
-    }
+  try {
+    console.log('Request body:', req.body);
+    const { name, email, password, cpassword } = req.body;
+    const result = await registerUser(name, email, password, cpassword);
+    res.status(result.status).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in /register route:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-app.get('/', (req, res) => {
-    res.redirect('/login');
+// Login Route (POST)
+app.post('/login', async (req, res) => {
+  try {
+    console.log('Request body:', req.body);
+    const { email, password } = req.body;
+    const result = await loginUser(email, password);
+    res.status(result.status).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in /login route:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
+// Start the server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
