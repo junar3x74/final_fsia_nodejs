@@ -28,6 +28,8 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { name, email, password, cpassword } = req.body;
+  console.log("clicking here")
+  console.log(req.body)
   const result = await registerUser(name, email, password, cpassword);
   res.status(result.status).json({ message: result.message });
 });
