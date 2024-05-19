@@ -34,7 +34,7 @@
 			<div class="account-content">
 				<div class="login-wrapper">
                     <div class="login-content">
-                        <form action="/register" method="POST">
+                        <form id="registerForm">
                             <div class="login-userset">
                                 <div class="login-logo logo-normal">
                                    <img src="assets/img/smart_log.png" alt="img">
@@ -141,7 +141,7 @@
 				</li>
 			</ul>
 		</div>
-
+        
 		
 		<!-- jQuery -->
         <script src="assets/js/jquery-3.7.1.min.js"></script>
@@ -154,7 +154,38 @@
 		
 		<!-- Custom JS --><script src="assets/js/theme-script.js"></script>	
 		<script src="assets/js/script.js"></script>
+        
 
+        <script>
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+        
+              const formData = new FormData(e.target);
+              const data = Object.fromEntries(formData.entries());
+        
+              try {
+                const response = await fetch('/api/users/register', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(data),
+                });
+        
+                const result = await response.json();
+        
+                if (response.ok) {
+                  window.location.href = result.redirectTo;
+                } else {
+                  alert(result.message);
+                }
+              } catch (error) {
+                console.error('Error:', error);
+                alert('Registration failed');
+              }
+            });
+          </script>
+        
         
 	
     </body>

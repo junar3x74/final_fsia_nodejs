@@ -33,7 +33,7 @@
             <div class="account-content">
                 <div class="login-wrapper">
                     <div class="login-content">
-                        <form action="/login" method="POST">
+                        <form id="loginForm">
                             <div class="login-userset">
                                 <div class="login-logo logo-normal">
                                     <img src="assets/img/smart_log.png" alt="img">
@@ -139,5 +139,36 @@
         <!-- Custom JS -->
         <script src="assets/js/theme-script.js"></script> 
         <script src="assets/js/script.js"></script>
+
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+        
+              const formData = new FormData(e.target);
+              const data = Object.fromEntries(formData.entries());
+        
+              try {
+                const response = await fetch('/api/users/login', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(data),
+                });
+        
+                const result = await response.json();
+        
+                if (response.ok) {
+                  window.location.href = result.redirectTo;
+                } else {
+                  alert(result.message);
+                }
+              } catch (error) {
+                console.error('Error:', error);
+                alert('Login failed');
+              }
+            });
+          </script>
+        
     </body>
 </html>
