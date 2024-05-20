@@ -34,7 +34,7 @@ async function registerUser(name, email, password, cpassword) {
 }
 
 // Function to login a user
-async function loginUser(email, password) {
+async function loginUser( req, email, password) {
   try {
     console.log('Received login request for:', email);
 
@@ -44,7 +44,7 @@ async function loginUser(email, password) {
 
     const trimmedEmail = email.trim().toLowerCase();
 
-    const query = 'SELECT id, password FROM users WHERE email = ?';
+    const query = 'SELECT id, username, password FROM users WHERE email = ?';
     const rows = await queryAsync(query, [trimmedEmail]);
 
     if (rows.length === 0) {
@@ -54,6 +54,7 @@ async function loginUser(email, password) {
 
     const userId = rows[0].id;
     const hashedPassword = rows[0].password;
+    const userName = rows[0].username;
 
     console.log('Hashed password from database:', hashedPassword);
 
@@ -63,8 +64,13 @@ async function loginUser(email, password) {
       return { status: 401, message: 'Invalid password' };
     }
 
+    // Set session variables
+    req.session.userId = userId;
+    req.session.username = userName;
+    req.session.email = email;
+
     console.log('Login successful:', trimmedEmail);
-    return { status: 200, message: 'Login successful', userId, redirectTo: '/' };
+    return { status: 200, message: 'Login successful', redirectTo: '/' };
   } catch (error) {
     console.error('Error logging in:', error);
     return { status: 500, message: 'Internal server error' };
