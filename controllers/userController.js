@@ -3,33 +3,29 @@ const { queryAsync } = require('../db');
 
 
 // Function to register a user
-async function registerUser(name, email, password, cpassword) {
+async function registerUser(username, email, password) {
+  const trimmedName = username.trim();
+  const trimmedEmail = email.trim().toLowerCase();
+
   try {
-    console.log('Received registration request:', { name, email, password, cpassword });
+      
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (!name || !email || !password || !cpassword) {
-      return { status: 400, message: 'All fields are required' };
-    }
+      
+      const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+      await queryAsync(query, [trimmedName, trimmedEmail, hashedPassword]);
 
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
-    const trimmedCPassword = cpassword.trim();
-
-    if (trimmedPassword !== trimmedCPassword) {
-      return { status: 400, message: 'Passwords do not match' };
-    }
-
-    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
-
-    const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    await queryAsync(query, [trimmedName, trimmedEmail, hashedPassword]);
-
-    console.log('User registered successfully:', trimmedEmail);
-    return { status: 201, message: 'User registered successfully', redirectTo: '/login' };
+      console.log('User registered successfully:', trimmedEmail);
+      return { status: 201, message: 'User registered successfully', redirectTo: '/login' };
   } catch (error) {
-    console.error('Error registering user:', error);
-    return { status: 500, message: 'Internal server error' };
+      
+      if (error.code === 'ER_DUP_ENTRY') {
+          console.log('Email already taken:', trimmedEmail);
+          return { status: 400, message: 'Email already taken' };
+      }
+
+      console.error('Error registering user:', error);
+      return { status: 500, message: 'Internal server error' };
   }
 }
 
@@ -50,6 +46,7 @@ async function loginUser(email, password) {
     if (rows.length === 0) {
       console.log('User not found:', trimmedEmail);
       return { status: 404, message: 'User not found' };
+      
     }
 
     const userId = rows[0].id;
